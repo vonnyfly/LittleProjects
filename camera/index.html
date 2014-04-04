@@ -7,7 +7,6 @@
 	<meta name="description" content="">
 	<meta name="author" content="">
 
-	<link href="css/bootstrap.css" rel="stylesheet">
 	<style>
       body {
         padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
@@ -20,17 +19,25 @@
         box-shadow: 0px 0px 10px blue;
       }
       .video { width: 40%; }
+      button {
+	      background: #333;
+	      color: #FFF;
+	      border-radius: 4px;
+	      border: 0;
+	      padding: 10px 14px;
+      }
     </style>
 	<link href="css/bootstrap-responsive.css" rel="stylesheet">
-
-	<script src="js/avatar.js"></script>
-	<script src="js/base64.js"></script>
+	<link href="css/bootstrap.css" rel="stylesheet">
 	<script src="js/jquery.js"></script>
 	<script src="js/jquery.base64.min.js"></script>
+
+	<script src="js/avatar.js"></script>
 
 	<script src="js/audiodisplay.js"></script>
 	<script src="js/recorder.js"></script>
 	<script src="js/main.js"></script>
+	<script src="js/tracker.js"></script>
 </head>
 
 <body onload="init()">
@@ -53,14 +60,14 @@
 		</section>
 		<section id="app" hidden>
 			<p>
-				<video class="video" id="monitor" autoplay></video>
+				<video class="video" id="monitor" muted autoplay></video>
 				<canvas class="video" id="photo"></canvas>
 			</p>
 			<p>
-				<input value="Begin Record(15s)" type=button value="&#x1F4F7;" id="record_video_btn">
-				<input value="Stop" type=button value="&#x1F4F7;" id="stop_btn">
-				<a id="save" href="#">
-					<img src="images/save.svg"></a>
+				<button id="record_video_btn">Begin Record(15s)</button>
+				<button id="stop_btn">Stop</button>
+<!-- 				<a id="save" href="#">
+					<img src="images/save.svg"></a> -->
 			</p>
 			<p>
 				<canvas class="audio" id="analyser" width="1024" height="500"></canvas>
@@ -72,7 +79,7 @@
 	</div>
 	<!-- /container -->
 	<!-- Placed at the end of the document so the pages load faster -->
-	<script src="js/tracker.js"></script>
+
 	<script src="js/bootstrap-transition.js"></script>
 	<script src="js/bootstrap-alert.js"></script>
 	<script src="js/bootstrap-modal.js"></script>

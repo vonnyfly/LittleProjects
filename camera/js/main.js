@@ -16,6 +16,7 @@
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 var audioContext = new AudioContext();
+
 var audioInput = null,
     realAudioInput = null,
     inputPoint = null,
@@ -23,7 +24,6 @@ var audioInput = null,
 var rafID = null;
 var analyserContext = null;
 var canvasWidth, canvasHeight;
-var recIndex = 0;
 
 /* TODO:
 
@@ -44,12 +44,61 @@ function gotBuffers(buffers) {
 
     // the ONLY time gotBuffers is called is right after a new recording is completed - 
     // so here's where we should set up the download.
-    audioRecorder.exportWAV(doneEncoding);
+    audioRecorder.exportPCM(doneEncoding); //export wav
 }
-//TODO: return blob;
+//see here http://stackoverflow.com/questions/19015555/pass-blob-through-ajax-to-generate-a-file
 function doneEncoding(blob) {
-    Recorder.setupDownload(blob, "myRecording" + ((recIndex < 10) ? "0" : "") + recIndex + ".wav");
-    recIndex++;
+    // Recorder.setupDownload(blob, "test.pcm");
+    var reader = new window.FileReader();
+    reader.readAsDataURL(blob);
+    reader.onloadend = function() {
+        base64data = reader.result.substring(22);
+        // console.log("emit " + base64data.indexOf("base64,") + 7);
+        console.log("blob.size: " + blob.size + "wav:" + base64data.length);
+        // base64data = base64data.substring(base64data.indexOf("base64,") + 7);
+        //convert to ilbc
+        var ilbc_data;
+        ilbc_data = Module.ilbcEncoded(30, base64data, blob.size);
+        var formdata = new FormData();
+        encode_msg_all = $.base64.encode(msg_all);
+        console.log("video:" + encode_msg_all.length);
+        formdata.append("fmx", encode_msg_all);
+        formdata.append("ilbc", ilbc_data);
+        //formdata.append("atm", "int_dawei.atm"); 
+        console.log("submit data");
+        $.ajax({
+            url: 'request.php',
+            data: formdata,
+            cache: false,
+            contentType: false,
+            processData: false,
+            type: 'POST',
+            success: function(data) {
+                //alert("success");
+                handleResult(data);
+            },
+            error: function() {
+                alert("error");
+            }
+        });
+    }
+}
+
+function handleResult(data) {
+    var url = data.substr(data.lastIndexOf("\n") + 1);
+    if (url.indexOf("http://") == 0) {
+        //window.open(url, '_blank');
+        $("#result").html(
+            '<video width="480" height="854" controls autoplay>' +
+            '<source src="' + url + '" type="video/mp4"></source>' +
+            '</video>');
+        // see here http://stackoverflow.com/questions/6682451/jquery-animate-scroll-to-id-on-page-load
+        $("html, body").animate({
+            scrollTop: $('#result').offset().top
+        }, 1000);
+    } else {
+        alert(data);
+    }
 }
 
 function toggleRecording(e) {
@@ -149,6 +198,9 @@ function init_audio(stream) {
     analyserNode.fftSize = 2048;
     inputPoint.connect(analyserNode);
 
+    // var config = {
+    //     // "bufferLen": 8192,
+    // };
     audioRecorder = new Recorder(inputPoint);
 
     zeroGain = audioContext.createGain();

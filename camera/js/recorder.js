@@ -36,13 +36,17 @@ DEALINGS IN THE SOFTWARE.
             command: 'init',
             config: {
                 sampleRate: this.context.sampleRate
+                // sampleRate: 8000 //default:44.1k
             }
         });
         var recording = false,
             currCallback;
 
         this.node.onaudioprocess = function(e) {
-            if (!recording) return;
+            if (!recording) {
+                console.log("stop");
+                return;
+            }
             worker.postMessage({
                 command: 'record',
                 buffer: [
@@ -50,6 +54,7 @@ DEALINGS IN THE SOFTWARE.
                     e.inputBuffer.getChannelData(1)
                 ]
             });
+            console.log("onaudioprocess");
         }
 
         this.configure = function(cfg) {
@@ -79,6 +84,16 @@ DEALINGS IN THE SOFTWARE.
             worker.postMessage({
                 command: 'getBuffers'
             })
+        }
+
+        this.exportPCM = function(cb, type) {
+            currCallback = cb || config.callback;
+            type = type || config.type || 'audio/wav';
+            if (!currCallback) throw new Error('Callback not set');
+            worker.postMessage({
+                command: 'exportPCM',
+                type: type
+            });
         }
 
         this.exportWAV = function(cb, type) {

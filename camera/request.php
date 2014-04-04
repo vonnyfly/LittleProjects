@@ -90,14 +90,41 @@ if($_POST) {
 	$file_pre = uniqid();
 	if(array_key_exists('fmx',$_POST)) {
 		$filename = write_binary_file($_POST['fmx'], "data", 'fmx');
-		array_push($files,$filename);
+		if(file_exists($filename)) {
+			array_push($files,$filename);
+		}else {
+			$result .= $filename . "isn't exist\n";
+		}
 	}
-	if(array_key_exists('irsb',$_POST)) {
-		$filename = write_binary_file($_POST['irsb'],$file_pre, 'irsb');
-		array_push($files,$filename);
+	// if(array_key_exists('ilbc',$_FILES) and !$_FILES['ilbc']['error']) {
+	if(array_key_exists('ilbc',$_POST)) {
+		$filename = write_binary_file($_POST['ilbc'], "data", 'ilbc');
+		if(file_exists($filename)) {
+			array_push($files,$filename);
+		}else {
+			$result .= $filename . "isn't exist\n";
+		}
+	 //    $filename = $file_pre . ".ilbc";
+	 //    // move_uploaded_file($_FILES['ilbc']['tmp_name'], $filename);
+
+	 //    //base64 decode
+	 //    //$content = base64_decode(file_get_contents($filename));
+	 //    if(!$fp = fopen($filename,"wb")) {
+	 //    	echo "cann't open file";
+	 //    	exit;
+	 //    }
+	 //    fwrite($fp,$content);
+	 //    fclose($fp);
+		// if(file_exists($filename)) {
+		// 	array_push($files,$filename);
+		// }else {
+		// 	$result .= $filename . "isn't exist\n";
+		// }
+	}else {
+		$result .= "ilbc upload error\n";
 	}
 
-	array_push($files, "data.ilbc");//only for test
+	//array_push($files, "data.ilbc");//only for test
 	$zipfile = $file_pre . ".amx";
 	create_zip($files,$zipfile);
 
@@ -117,16 +144,19 @@ if($_POST) {
 $video_path =  $video_prefix . $video_name;
 $output = " -output_path " . $video_path;
 $cmd = $client.$msg.$model.$output; //-ip 172.16.123.28";
+
 $result .= $cmd . "\n";
-$result .= shell_exec($cmd);
+$result .= shell_exec($cmd) . "\n";
 if(file_exists($video_path)){
 	$url = "http://parender-01.bj.intel.com/fengli/camera/video/".$video_name;
+	$result .= $url;
 	if ($_POST){
-		echo $url;
+		echo $result;
 	}else{
+		echo $result;
 		header("Location: $url");
 	}
 }else{
-	echo $result . "\nrender failed";
+	echo $result . "\nrender failed!";
 }
 ?>

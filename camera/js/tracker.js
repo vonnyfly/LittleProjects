@@ -1,3 +1,7 @@
+var encode_msg_all = "";
+var msg_all = "";
+var is_stop = 0;
+
 function errorHandler(e) {
     console.log("Error");
     console.dir(e);
@@ -9,20 +13,19 @@ function init() {
 
         navigator.webkitGetUserMedia({
             video: true,
-            audio: true
+            audio: true,
         }, gotStream, noStream);
 
         var video = document.getElementById('monitor');
         var canvas = document.getElementById('photo');
 
         function gotStream(stream) {
+            init_audio(stream);
             video.src = webkitURL.createObjectURL(stream);
             video.onerror = function() {
                 stream.stop();
                 streamError();
             };
-            init_audio(stream);
-
             document.getElementById('splash').hidden = true;
             document.getElementById('app').hidden = false;
             $("#stop_btn").click(stop_record);
@@ -37,10 +40,6 @@ function init() {
         function streamError() {
             document.getElementById('errorMessage').textContent = 'Camera error.';
         }
-
-
-        var imgs = "";
-        var is_stop = 0;
 
         function stop_record() {
             is_stop = 1;
@@ -72,6 +71,7 @@ function init() {
             return grayData;
         }
 
+        // return 88B Uint8Array
         function detect_one_frame(grayData) {
             var msg;
             var data;
@@ -87,11 +87,15 @@ function init() {
             var sec = 15; // fixed = 15
             var interval = 1000 / fps; // ms
             var num_frames = fps * sec;
-            var encode_msg_all = "";
-            var msg_all = "";
+
+            //clean msg
+            encode_msg_all = "";
+            msg_all = "";
+
+            //clear stop bit
             is_stop = 0;
 
-            // var dataImgs = new Array(num_frames);
+            var dataImgs = new Array(num_frames);
 
             // disable start,enable stop
             $("#record_video_btn").attr('disabled', true);
@@ -104,51 +108,28 @@ function init() {
             audioRecorder.record();
 
             var timerId = setInterval(function() {
-                i += 1;
                 // var start1 = new Date().getTime();
-                msg_all += detect_one_frame(getFrameData());; // 50ms
+                //msg_all += detect_one_frame(getFrameData());; // 50ms
+                dataImgs[i] = getFrameData();
                 // console.log('detect time: ' + (new Date().getTime() - start1));
-
+                i += 1;
                 if (i >= num_frames || is_stop) {
-                    // NOTE: ajax request
-                    // stop record audio
-                    audioRecorder.stop();
-                    audioRecorder.getBuffers(gotBuffers);
-
                     // stop timer
                     clearInterval(timerId);
-                    Module.webTrackerRelease();
-                    console.log('Execution time: ' + (new Date().getTime() - start));
-                    // prepare submit form data
+
+                    // stop record audio
+                    audioRecorder.stop();
+                    console.log('real time(15s): ' + (new Date().getTime() - start));
 
                     // detect all imags
-                    // var j = 0;
-                    // for (; j < num_frames; j++) {
-                    //     msg_all += detect_one_frame(dataImgs[j]);; // 50ms
-                    // }
-                    var formdata = new FormData();
-                    encode_msg_all = $.base64.encode(msg_all);
-                    console.log(encode_msg_all.length);
-                    formdata.append("fmx", encode_msg_all);
-                    //formdata.append("irsb", msg);
-                    //formdata.append("atm", "int_dawei.atm"); 
-                    console.log("submit data");
-                    $.ajax({
-                        url: 'http://parender-01.bj.intel.com/fengli/camera/request.php',
-                        data: formdata,
-                        cache: false,
-                        contentType: false,
-                        processData: false,
-                        type: 'POST',
-                        success: function(data) {
-                            //alert("success");
-                            handleResult(data);
-                        },
-                        error: function() {
-                            alert("error");
-                        }
-                    });
-                    console.log('Elapsed time: ' + (new Date().getTime() - start));
+                    start = new Date().getTime();
+                    var j = 0;
+                    for (; j < num_frames; j++) {
+                        msg_all += detect_one_frame(dataImgs[j]);; // 50ms
+                    }
+                    console.log('detect time: ' + (new Date().getTime() - start));
+                    audioRecorder.getBuffers(gotBuffers);
+                    Module.webTrackerRelease();
                     $("#record_video_btn").attr('disabled', false);
                     $("#stop_btn").attr('disabled', true);
                 }
@@ -157,22 +138,6 @@ function init() {
 
         function stop_record() {
             is_stop = 1;
-        }
-
-        function handleResult(data) {
-            if (data.indexOf("http://") == 0) {
-                //window.open(data, '_blank');
-                $("#result").html(
-                    '<video width="480" height="854" controls autoplay>' +
-                    '<source src="' + data + '" type="video/mp4"></source>' +
-                    '</video>');
-                // see here http://stackoverflow.com/questions/6682451/jquery-animate-scroll-to-id-on-page-load
-                $("html, body").animate({
-                    scrollTop: $('#result').offset().top
-                }, 1000);
-            } else {
-                alert(data);
-            }
         }
     } else {
         document.getElementById('errorMessage').textContent = 'No native camera support available.';
