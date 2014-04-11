@@ -4,6 +4,7 @@ cc_library(
     "gen-cpp/log_constants.cpp",
     "gen-cpp/LogService.cpp",
     "gen-cpp/log_types.cpp",
+    "cpp-impl/report.cpp",
     ],
     deps = [
         "//thirdparty/boost:boost_system",
