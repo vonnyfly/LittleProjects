@@ -20,8 +20,6 @@ import signal
 import re
 
 
-verbose=False
-
 class Counter(object):
     """ atomic counter,learn form http://python.dzone.com/articles/shared-counter-python%E2%80%99s """
     def __init__(self, initval=0):
@@ -42,7 +40,8 @@ class Worker(Thread):
         Thread.__init__(self)
         self.pool = pool
         self.tasks = pool.tasks
-        if verbose:
+        self.verbose = pool.verbose
+        if self.verbose:
             self.results = pool.results
             self.errors_results = pool.errors_results
         else:
@@ -67,7 +66,7 @@ class Worker(Thread):
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE)
                 output,err = p.communicate()
-                if verbose:
+                if self.verbose:
                     if len(err) != 0:
                         self.errors_results.put((id,err))
                     else:
@@ -84,10 +83,11 @@ class Worker(Thread):
 
 class ThreadPool:
     """Pool of threads consuming tasks from a queue"""
-    def __init__(self, num_threads,event):
+    def __init__(self, num_threads,event,verbose=False):
         self.is_closed = False
         self.tasks = Queue(num_threads)
-        if verbose:
+        self.verbose = verbose
+        if self.verbose:
             # only verbose
             self.results = Queue(0)
             self.errors_results = Queue(0)
@@ -119,7 +119,7 @@ class ThreadPool:
         self.tasks.join()
 
     def get_results(self):
-        if verbose:
+        if self.verbose:
             ret = []
             while True:
                 try:
@@ -133,7 +133,7 @@ class ThreadPool:
         else:
             return self.num_dones.value()
     def get_errors(self):
-        if verbose:
+        if self.verbose:
             ret = []
             while True:
                 try:
@@ -256,7 +256,6 @@ def main():
             "verbose:{5}\n".format(options.thread_num,options.atm_path,
                                     options.amx_path,options.executor,
                                     run_secs,options.verbose)
-    verbose=options.verbose
     event = Event()
     event.clear()
 
@@ -283,7 +282,7 @@ def main():
         timer = Timer(run_secs,check_interval,kwargs={"event":event})
         timer.start()
 
-    pool = ThreadPool(options.thread_num,event)
+    pool = ThreadPool(options.thread_num,event,options.verbose)
     start_time = time.time()
 
     producer = Thread(target=run_all,args=(pool,event,options))
@@ -305,7 +304,7 @@ def main():
     errors = pool.get_errors()
     num_dones = 0
     num_errors = 0
-    if verbose:
+    if options.verbose:
         num_dones = len(results)
         num_errors = len(errors)
         for ret in results:
