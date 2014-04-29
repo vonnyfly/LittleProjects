@@ -36,12 +36,12 @@ BIN_PROGRAM=$BIN_PROGRAM_HOME/pa_render_server.run
 if [ "$1"x = "cg1.4"x ]
 then
     echo "worker number:$WORKER_NUM thread number:$THREAD_NUM"
-    $BIN_PROGRAM -- -worker_num $WORKER_NUM -thread $THREAD_NUM > LOGFILE_NAME 2>&1 &
+    $BIN_PROGRAM -- -worker_num $WORKER_NUM -thread $THREAD_NUM > ${LOGFILE_NAME} 2>&1 &
 elif [ "$1"x = "g2.2"x ]
 then
     HW_NUM=3
     echo "worker $WORKER_NUM thread $THREAD_NUM hw $HW_NUM"
-    $BIN_PROGRAM -- -enable_hw_encoder -worker_num $WORKER_NUM -thread $THREAD_NUM -hw_num $HW_NUM > LOGFILE_NAME 2>&1 &
+    $BIN_PROGRAM -- -enable_hw_encoder -worker_num $WORKER_NUM -thread $THREAD_NUM -hw_num $HW_NUM > ${LOGFILE_NAME} 2>&1 &
 else
     echo "Please add the parameter cg1.4 or g2.2"
     exit 3

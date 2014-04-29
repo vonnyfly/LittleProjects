@@ -171,38 +171,7 @@ def get_files(dir_,ext):
     '''
     '''
     return glob.glob(os.path.join(dir_,ext))
-#class LogServerThread(Thread):
-#    ''' receive performance report of render server and redirect
-#    it to out_file, remember we should clean out_file, because
-#    we will append data in the file
-#    '''
-#    def __init__(self,exec_logserver,out_file):
-#        Thread.__init__(self)
-#        self.out_file = out_file
-#        self.exec_logserver = exec_logserver
-#        self.out = None
-#        self.err = None
-#        self.cmd = "python {0} -o {1}".format(self.exec_logserver,self.out_file)
-#
-#    def run(self):
-#        print >>sys.stderr,"{0}\n".format(self.cmd)
-#        '''
-#        this worker concat content in the file
-#        '''
-#        if os.path.exists(self.out_file):
-#            try:
-#                os.unlink(self.out_file)
-#            except OSError:
-#                    pass
-#        p = subprocess.Popen(self.cmd, shell=True,
-#                                stdout=subprocess.PIPE,
-#                                stderr=subprocess.PIPE,
-#                                preexec_fn=os.setsid)
-#        while not self.event.is_set():
-#            self.event.wait(1)
-#        os.killpg(p.pid, signal.SIGTERM)
-#
-#        #self.out,self.err = p.communicate()
+        #self.out,self.err = p.communicate()
 
 def run_all(pool,event,options):
     """ retrieve all amx and atm,exit when event is set
@@ -241,23 +210,15 @@ def main():
     parser.add_option("-e", "--executor_path", type="string",
                             default="../RenderClientNewMain", dest="executor",
                             help="Client executor path.")
-    parser.add_option("-l", "--exec_logserver", type="string",action="store",
-                            default="/home/fengli/code/ndg_iso_pa_avatar_"\
-                      "render_server-service/script/LogServer.py",
-                            help="logserver path.")
     parser.add_option("-t", "--run_times", type="string",action="store",
                       help="after run_times,program exit.\n"
                       "d means day,h means hours,m means minute,s means seconds\n"
                       "support float,default 0:run until ctr-c is pressed")
-    parser.add_option("-o", "--output_file", type="string",action="store",
-                      default="/tmp/render",help="output performance data to"
-                      "it")
     parser.add_option("-N", "--iterate", type="int", default=-1,action='store',
                       help="run how many times,must > 0")
     parser.add_option("-v", "--verbose", action="store_true",default=False,
                       dest="verbose", help="print debug info")
     (options, args) = parser.parse_args()
-    options.output_file ="%s.%s"%(options.output_file,options.thread_num)
     if options.run_times:
         if re.match("^\d+?(\.\d+?)?[dhms]$", options.run_times) is None:
             parser.print_help()
@@ -282,24 +243,6 @@ def main():
                                     run_secs,options.verbose)
     event = Event()
     event.clear()
-
-    # start logserver
-    '''
-    this worker concat content in the file
-    '''
-    if os.path.exists(options.output_file):
-        try:
-            os.unlink(options.output_file)
-        except OSError:
-                pass
-    cmd = "python {0} -o {1}".format(options.exec_logserver,options.output_file)
-    print >>sys.stderr,"{0}\n".format(cmd)
-    logPro = subprocess.Popen(cmd, shell=True,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            preexec_fn=os.setsid)
-    #logThd = LogServerThread(options.exec_logserver,options.output_file)
-    #logThd.start()
 
     # start timer
     if run_secs > 0:
@@ -339,15 +282,13 @@ def main():
         num_dones = results
         num_errors = errors
 
-    #http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
-    os.killpg(logPro.pid, signal.SIGTERM)
     print >>sys.stderr,"failed: {5} ,request: {0} ,total_sec: {1:.1f} ,"\
-            "threads: {2} ,throught: {3:.1f} req/s,latency: {4:.1f} s/req,"\
-            "output:{6}".format(
+            "threads: {2} ,throught: {3:.1f} req/s,latency: "\
+            "{4:.1f} s/req".format(
                 num_dones,elapsed_time,options.thread_num,
                 num_dones/elapsed_time,
                 elapsed_time/num_dones if num_dones > 0 else 0,
-                num_errors,options.output_file)
+                num_errors)
 
 if __name__ == '__main__':
     main()
