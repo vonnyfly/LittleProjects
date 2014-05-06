@@ -27,11 +27,15 @@ LOG_HOME=$PWD
 WORKER_NUM=20
 THREAD_NUM=12
 
-
-LOGFILE_NAME=$LOG_HOME/log.txt
-echo "log file $LOGFILE_NAME"
-
 BIN_PROGRAM=$BIN_PROGRAM_HOME/pa_render_server.run
+
+if [ -n $2 ]
+then
+  LOGFILE_NAME=$LOG_HOME/$2
+else
+  LOGFILE_NAME=$LOG_HOME/log.txt
+fi
+echo "log file $LOGFILE_NAME"
 
 if [ "$1"x = "cg1.4"x ]
 then

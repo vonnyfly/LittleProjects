@@ -3,7 +3,6 @@
 """
 Prepare your environment:
   1. plese install thrift for python
-  
   2. prepare your workspace
 
   $ mkdir test
