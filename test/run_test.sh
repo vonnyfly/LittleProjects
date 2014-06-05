@@ -47,7 +47,7 @@ bash ./stop.sh
 # cpu encode
 #################################################################
 if [ $cpu_enable -eq 1 ] ;then
-  bash ./start.sh cg1.4
+  bash ./start.sh cg1.4 cpu.raw.log.${concur}
   for concur in ${concurrents[@]};do
     echo "=======================concurrent = $concur ==================="
     python LogServer.py -o cpu-log/render.log.$concur &
@@ -64,7 +64,7 @@ fi
 #################################################################
 if [ $hw_enable -eq 1 ] ;then
   for concur in ${concurrents[@]};do
-    bash ./start.sh g2.2 ${concur}.log
+    bash ./start.sh g2.2 hw.raw.log.${concur}
     echo "=======================concurrent = $concur ==================="
     python LogServer.py -o hw-log/render.log.$concur &
     ./RenderBench -model_dir `pwd`/model -message_dir ./message -concurrent $concur -iterator $iterator

@@ -5,7 +5,7 @@ RENDER_SERVER_NAME=RenderServerMain
 LISTEN_PORT=9999
 pid_of_RenderServer=`pidof $RENDER_SERVER_NAME`
 
-if [ ! -z $pid_of_RenderServer ]
+if [ ! -z "$pid_of_RenderServer" ]
 then
     echo "Start failed! Please stop the $RENDER_SERVER_NAME first...."
     exit 1
@@ -29,7 +29,7 @@ THREAD_NUM=12
 
 BIN_PROGRAM=$BIN_PROGRAM_HOME/pa_render_server.run
 
-if [ -n $2 ]
+if [ -n "$2" ]
 then
   LOGFILE_NAME=$LOG_HOME/$2
 else
